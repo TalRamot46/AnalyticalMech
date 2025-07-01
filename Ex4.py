@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Union, List, Tuple
+from typing import List, Tuple
 
-# Set a consistent plot style for better aesthetics
-# Simulation parameters
 t_final = 10
 alpha = 4
 dt = 10 ** -3
@@ -48,14 +46,11 @@ def solve_numeric_symplectic(x_0: float, p_0: float, num_iterations: int, dt: fl
     x[0] = x_0
     p[0] = p_0
     for n in range(num_iterations):
-        # Update momentum using current position
         p[n + 1] = p[n] - alpha * np.sign(x[n]) * dt
-        # Update position using the newly calculated momentum (symplectic property)
         x[n + 1] = x[n] + p[n + 1] * dt
         t[n + 1] = (n + 1) * dt
         if (x[n] >= 0 and x[n + 1] <=0) or (x[n] <= 0 and x[n + 1] >= 0):
             cross_points.append(t[n])
-    print(cross_points)
     cycle_time = 2 * np.average(np.diff(cross_points))
     cycle_time_err = np.std(np.diff(cross_points), ddof=1)
     frequecy = 2 * np.pi / cycle_time
@@ -79,8 +74,9 @@ def simulation() -> None:
 
     frequencies = []
     frequency_errs = []
+    energies = np.linspace(10, 50, 5)
 
-    for E in np.linspace(10, 50, 5):
+    for E in energies:
         x_0 = 0.0
         p_0 = np.sqrt(2 * E)
         t, x, p, frequency, frequency_err = solve_numeric_symplectic(x_0, p_0, NUM_ITERATIONS, dt)
@@ -99,14 +95,15 @@ def simulation() -> None:
     ax.set_xlabel("Energy (E)", fontsize=12)
     ax.set_ylabel("Frequency (Hz)", fontsize=12)
     ax.grid(True, linestyle='--', alpha=0.7)
-    energies = np.linspace(10, 50, 5)
+
     plot_errorbars_on_figure(
         energies, np.zeros_like(energies), frequencies, frequency_errs, "Simulated Frequencies", frequencies_fig, color='tab:red'
     )
-    energies = np.linspace(10, 50, 100)
-    theoretical_frequencies = np.pi * alpha / (2 * np.sqrt(2 * energies))
+
+    continuous_energies = np.linspace(10, 50, 100)
+    theoretical_frequencies = np.pi * alpha / (2 * np.sqrt(2 * continuous_energies))
     plot_on_figure(
-        energies, theoretical_frequencies, "Theoretical Frequency", frequencies_fig, color='tab:orange'
+        continuous_energies, theoretical_frequencies, "Theoretical Frequency $\omega(I) = \\frac{\pi a}{2 \sqrt{2E}}$", frequencies_fig, color='tab:orange'
     )
 
 if __name__ == "__main__":
