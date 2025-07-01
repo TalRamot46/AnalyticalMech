@@ -1,21 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Tuple
+from symplectic import forceHenon, forceToda
 
-t_final = 20
-alpha = 4
-dt = 10 ** -2
+t_final = 1000
+dt = 10 ** -1
 NUM_ITERATIONS = int(t_final / dt)
 
-def forceHenon(x: float, y: float) -> Tuple[float, float]:
-    Fx = - (x + y ** 2)
-    Fy = - (1 + 2*x)*y + y**2
-    return Fx, Fy
-
-def forceToda(x: float, y: float) -> Tuple[float, float]:
-    Fx = - np.sqrt(3)/12 * (np.exp(2*y+2*np.sqrt(3)*x) - np.exp(2*y-2*np.sqrt(3)*x) + np.exp(-4*y))
-    Fy = - 1/12 * (np.exp(2*y+2*np.sqrt(3)*x) + np.exp(2*y-2*np.sqrt(3)*x) - 2 * np.exp(-4*y))
-    return Fx, Fy
 
 def poincare_surface(x_0: float, y_0: float, px_0: float, py_0: float, force: callable) -> Tuple[List[float], List[float]]:
     y_poincare = []
@@ -50,9 +41,9 @@ def plot_poincare_surface(y, py, title, save_path,
     ax = fig.gca()
     
     # Plot x(t)
-    ax.plot(y, py, color=trajectory_color, linewidth=2, label='x(t)')
-    ax.scatter(y[0], py[0], color=start_color, s=marker_size, marker='o', 
-                label=f'Start', zorder=5, edgecolors='black')
+    ax.scatter(y[1:-1], py[1:-1], color=trajectory_color, linewidth=2, label='x(t)')
+    ax.scatter(y[0], py[0], color=start_color, s=marker_size, marker='x', 
+                label=f'Start', zorder=5)
     ax.scatter(y[-1], py[-1], color=end_color, s=marker_size, marker='s', 
                 label=f'End', zorder=5, edgecolors='black')
     ax.set_xlabel('y Position')
@@ -69,31 +60,45 @@ def plot_poincare_surface(y, py, title, save_path,
     
     return fig, ax
 
+def generate_initial_conditions(E, force):
+    if force == forceHenon:
+        print(E, np.roots([-E, 0, 1/2, 1/3])[0], np.roots([-E, 0, 1/2, 1/3])[1])
+        return [
+            (0.0, 0.0, np.sqrt(E), np.sqrt(E)),
+            # (0.0, np.roots([-E, 0, 1/2, 1/3])[0], 0.0, 0.0),
+            # (0.0, np.roots([-E, 0, 1/2, 1/3])[1], 0.0, 0.0),
+        ]
+    elif force == forceToda:
+        return [
+            (0.0, 0.0, np.sqrt(E), np.sqrt(E))
+        ]
+
 
 # Example usage with sample data
 if __name__ == "__main__":
-    Es_henon = [0.03,0.1,0.16]
+    Es_henon = [0.03,0.1,0.16, 0.2, 0.25]
     Es_toda = [0.03,0.1,0.16,0.5,5]
     energies = [Es_henon, Es_toda]
     forces = [forceHenon, forceToda]
 
     for i ,(Es, force) in enumerate(zip(energies, forces)):
         for E in Es:
-            y, py = poincare_surface(
-                x_0=0, y_0=0, px_0=np.sqrt(E), py_0=np.sqrt(E), force=force
-            )
-        
-            # Create output directory
-            import os
-            output_dir = "poincare_plots_output"
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
+            for initial_conditions in generate_initial_conditions(E, force):
+                y, py = poincare_surface(
+                    *initial_conditions, force=force
+                )
             
+                # Create output directory
+                import os
+                output_dir = "Ex6/figures/poincare_plots_output"
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+                
 
-            # Plot 2D projections
-            fig_2d, axes_2d = plot_poincare_surface(
-                y, py,
-                title=f"Poincare Surface E={E}",
-                save_path=os.path.join(output_dir, f"poincare_surface_{force.__name__}_E={E}.png")
-            )
+                # Plot 2D projections
+                fig_2d, axes_2d = plot_poincare_surface(
+                    y, py,
+                    title=f"Poincare Surface E={E}",
+                    save_path=os.path.join(output_dir, f"poincare_surface_{force.__name__}_E={E}.png")
+                )
         

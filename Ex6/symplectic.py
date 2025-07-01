@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Tuple
 
-t_final = 20
+t_final = 200
 alpha = 4
-dt = 10 ** -3
+dt = 10 ** -2
 NUM_ITERATIONS = int(t_final / dt)
 
 def forceHenon(x: float, y: float) -> Tuple[float, float]:
@@ -13,7 +13,7 @@ def forceHenon(x: float, y: float) -> Tuple[float, float]:
     return Fx, Fy
 
 def forceToda(x: float, y: float) -> Tuple[float, float]:
-    Fx = - np.sqrt(3)/12 * (np.exp(2*y+2*np.sqrt(3)*x) - np.exp(2*y-2*np.sqrt(3)*x) + np.exp(-4*y))
+    Fx = - np.sqrt(3)/12 * (np.exp(2*y+2*np.sqrt(3)*x) - np.exp(2*y-2*np.sqrt(3)*x))
     Fy = - 1/12 * (np.exp(2*y+2*np.sqrt(3)*x) + np.exp(2*y-2*np.sqrt(3)*x) - 2 * np.exp(-4*y))
     return Fx, Fy
 
@@ -38,62 +38,6 @@ def solve_numeric_symplectic(x_0: float, y_0: float, px_0: float, py_0: float, f
         if (x[n] >= 0 and x[n + 1] <=0) or (x[n] <= 0 and x[n + 1] >= 0):
             cross_points.append(t[n])
     return t, x, y, px, py
-
-def plot_3d_dynamics(t, x, y, title="3D Trajectory Dynamics", save_path=None, 
-                     figsize=(12, 9), trajectory_color='blue', start_color='green', 
-                     end_color='red', marker_size=100):
-    """
-    Plot 3D dynamics showing the trajectory (x(t), y(t)) in space with time as the third dimension
-    
-    Parameters:
-    t: array of time values
-    x: array of x coordinates
-    y: array of y coordinates
-    title: plot title
-    save_path: optional path to save the figure
-    figsize: figure size tuple
-    trajectory_color: color of the trajectory line
-    start_color: color of the starting point marker
-    end_color: color of the ending point marker
-    marker_size: size of start/end markers
-    """
-    
-    # Create 3D figure
-    fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(111, projection='3d')
-    
-    # Plot the trajectory line
-    ax.plot(x, y, t, color=trajectory_color, linewidth=2, alpha=0.8, label='Trajectory')
-    
-    # Mark starting point
-    ax.scatter(x[0], y[0], t[0], color=start_color, s=marker_size, 
-               marker='o', label=f'Start (t={t[0]:.3f})', alpha=0.9, edgecolors='black')
-    
-    # Mark ending point
-    ax.scatter(x[-1], y[-1], t[-1], color=end_color, s=marker_size, 
-               marker='s', label=f'End (t={t[-1]:.3f})', alpha=0.9, edgecolors='black')
-    
-    # Set labels and title
-    ax.set_xlabel('X Position')
-    ax.set_ylabel('Y Position')
-    ax.set_zlabel('Time (t)')
-    ax.set_title(title)
-    
-    # Add legend
-    ax.legend(loc='upper left')
-    
-    # Add grid
-    ax.grid(True, alpha=0.3)
-    
-    # Set viewing angle for better visualization
-    ax.view_init(elev=20, azim=45)
-    
-    # Save if path provided
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"3D dynamics plot saved to: {save_path}")
-    
-    return fig, ax
 
 
 def plot_2d_projection_dynamics(t, x, y, title="2D Trajectory Projections", save_path=None, 
@@ -161,12 +105,13 @@ def plot_2d_projection_dynamics(t, x, y, title="2D Trajectory Projections", save
 
 # Example usage with sample data
 if __name__ == "__main__":
-    E_henon = 0.001
-    E_toda = 0.001
+    E_henon = 0.3
+    E_toda = 0.3
     energies = [E_henon, E_toda]
     forces = [forceHenon, forceToda]
 
     for i ,(E, force) in enumerate(zip(energies, forces)):
+        print(i, E ,force)
         t_sample, x_sample, y_sample, px_sample, py_sample = solve_numeric_symplectic(
             x_0=0, y_0=0, px_0=np.sqrt(E), py_0=np.sqrt(E), force=force
         )
@@ -177,18 +122,11 @@ if __name__ == "__main__":
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             print(f"Created directory: {output_dir}")
-        
-        # Plot 3D dynamics
-        fig_3d, ax_3d = plot_3d_dynamics(
-            t_sample, x_sample, y_sample, 
-            title=f"3D Spiral Trajectory Dynamics {force.__name__}",
-            save_path=os.path.join(output_dir, f"3d_dynamics_example-{force.__name__}.png")
-        )
-        
+                
         # Plot 2D projections
         fig_2d, axes_2d = plot_2d_projection_dynamics(
             t_sample, x_sample, y_sample,
-            title=f"2D Projections of Spiral Dynamics {force.__name__}",
-            save_path=os.path.join(output_dir, f"2d_projections_example-{force.__name__}.png")
+            title=f"2D Projections {force.__name__}",
+            save_path=os.path.join(output_dir, f"2d_projections_{force.__name__}.png")
         )
         
